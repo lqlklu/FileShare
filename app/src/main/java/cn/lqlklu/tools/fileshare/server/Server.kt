@@ -10,7 +10,6 @@ import java.io.InputStream
 
 fun createServer(
     port: Int,
-    fetchAssets: (p: String) -> InputStream,
 ) = embeddedServer(
     Netty, port, watchPaths = emptyList(),
 ) {
@@ -20,6 +19,6 @@ fun createServer(
     install(ContentNegotiation) {
         json()
     }
-    configureIndex(fetchAssets)
+    configureStatic()
     configureApi()
 }

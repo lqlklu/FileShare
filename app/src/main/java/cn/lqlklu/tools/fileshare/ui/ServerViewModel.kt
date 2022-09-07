@@ -29,7 +29,7 @@ class ServerViewModel @Inject constructor(
     fun start(port: Int) {
         pending = true
         viewModelScope.launch(Dispatchers.IO) {
-            (server ?: createServer(port, fetchAssets).apply {
+            (server ?: createServer(port).apply {
                 server = this
             }).start(false)
             withContext(Dispatchers.Main) {
@@ -51,8 +51,4 @@ class ServerViewModel @Inject constructor(
 
     private val context: Context
         get() = application.applicationContext
-
-    private val fetchAssets = { it: String ->
-        context.assets.open(it)
-    }
 }
