@@ -166,6 +166,8 @@ fun App(
                         )
                     }
                 }
+
+                Clipboard(serverViewModel = serverViewModel, snackbarHostState = snackbarHostState)
             }
         }
     }

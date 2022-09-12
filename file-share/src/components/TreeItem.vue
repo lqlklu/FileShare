@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { ElLink, ElMenuItem, ElIcon, ElLoading } from "element-plus";
 import { Folder, Document } from "@element-plus/icons-vue";
 
-import { TreeItem, navigateFile } from "@/api/tree";
+import { TreeItem, navigateFile } from "@/api/files";
 import { useFilesStore } from "@/stores/files";
 import path from "@/utils/path";
 import { humanSize } from "@/utils/common";
@@ -12,25 +12,28 @@ export interface TreeItemProps {
   it: TreeItem;
 }
 const props = defineProps<TreeItemProps>();
+
 const lengthText = humanSize(props.it.length);
 const files = useFilesStore();
 const click = () => {
-  if (props.it.type == "dir") {
-    files
-      .fetch(path.join(files.path, props.it.name))
-      .then(() => {})
-      .catch((err) => {
-        console.error(err);
-      });
+  if (files.selecting) {
+    files.toggleSelect(props.it.path);
   } else {
-    navigateFile(path.join(files.path, props.it.name));
+    if (props.it.type == "dir") {
+      files.navigate(props.it.path);
+    } else {
+      navigateFile(path.join(files.path, props.it.name));
+    }
   }
+};
+const select = () => {
+  files.toggleSelect(props.it.path);
 };
 </script>
 
 <template>
-  <div class="tree-item" @click="click" :key="props.it.path">
-    <ElIcon class="icon" :size="26">
+  <div class="tree-item" @click="click" :class="{ selected: files.selected(props.it.path) }">
+    <ElIcon class="icon" :size="26" @click.stop="select">
       <Document v-if="props.it.type != 'dir'" />
       <Folder v-if="props.it.type == 'dir'" />
     </ElIcon>
@@ -51,8 +54,14 @@ const click = () => {
   font-size: var(--el-menu-item-font-size);
   cursor: pointer;
 }
+.tree-item.selected {
+  background-color: rebeccapurple;
+}
 .tree-item:hover {
   background-color: var(--el-menu-hover-bg-color);
+}
+.tree-item.selected:hover {
+  background-color: purple;
 }
 .tree-item .icon {
   margin-right: 20px;
@@ -65,8 +74,18 @@ const click = () => {
 }
 .info > div {
   width: 100%;
-  flex: 1 0 0;
+  height: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.name {
+  flex: 3 0 0;
+  text-overflow: ellipsis;
+}
+.length {
+  flex: 1 0 0;
+}
+.last-modify {
+  flex: 1 0 0;
 }
 </style>

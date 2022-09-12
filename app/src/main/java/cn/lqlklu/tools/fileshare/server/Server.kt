@@ -1,5 +1,6 @@
 package cn.lqlklu.tools.fileshare.server
 
+import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -10,6 +11,8 @@ import java.io.InputStream
 
 fun createServer(
     port: Int,
+    onReceiveClipboard: (it: ClipboardContent) -> Unit,
+    uploadFile: (name: String, i: InputStream) -> Unit,
 ) = embeddedServer(
     Netty, port, watchPaths = emptyList(),
 ) {
@@ -20,5 +23,6 @@ fun createServer(
         json()
     }
     configureStatic()
-    configureApi()
+    configureApi(uploadFile)
+    configureWebSocket(onReceiveClipboard)
 }

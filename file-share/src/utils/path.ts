@@ -4,6 +4,11 @@ export function join(...paths: string[]): string {
   return paths.join(sep).replace(r, sep);
 }
 
+export function basename(path: string): string {
+  return path.split("/").pop()?.split("\\").pop() || path;
+}
+
 export default {
   join,
+  basename,
 };

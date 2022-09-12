@@ -21,20 +21,23 @@ const handleClose = (key: string) => {};
           <ElMenuItem index="/files">
             <span> Files </span>
           </ElMenuItem>
-          <ElMenuItem index="documents">
+          <ElMenuItem index="/documents">
             <span> Documents </span>
           </ElMenuItem>
-          <ElMenuItem index="downloads">
+          <ElMenuItem index="/downloads">
             <span> Downloads </span>
           </ElMenuItem>
-          <ElMenuItem index="music">
+          <ElMenuItem index="/music">
             <span> Music </span>
           </ElMenuItem>
-          <ElMenuItem index="pictures">
+          <ElMenuItem index="/pictures">
             <span> Pictures </span>
           </ElMenuItem>
-          <ElMenuItem index="videos">
+          <ElMenuItem index="/videos">
             <span> Videos </span>
+          </ElMenuItem>
+          <ElMenuItem index="/clipboard">
+            <span> Clipboard </span>
           </ElMenuItem>
         </ElMenu>
       </ElAside>

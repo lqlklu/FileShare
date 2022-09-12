@@ -1,12 +1,10 @@
-import type { Ref } from "vue";
 import { defineStore } from "pinia";
 import { ElLoading, ElMessage } from "element-plus";
-import { useLocalStorage } from "@vueuse/core";
 
-import { fetchTree, TreeItem } from "@/api/tree";
+import router from "@/router";
+import { lsDirectory, TreeItem, deleteFiles, downloadFiles } from "@/api";
 import path from "@/utils/path";
-
-const ls = <T>(id: string, defaultValue: T): Ref<T> => useLocalStorage(id, defaultValue);
+import { localStorage } from "./utils";
 
 export type SortMode = "name" | "nameReverse" | "time" | "timeReverse";
 
@@ -31,14 +29,15 @@ const nameSortFn: SortFn = (a: TreeItem, b: TreeItem) => {
 export const useFilesStore = defineStore("files", {
   state: () => {
     return {
-      path: ls("path", ""),
-      pathArr: new Array<{ name: string; dest: string }>(),
+      path: "",
+      pathArr: new Array<PathItem>(),
       rawItems: [] as TreeItem[],
-      showHidden: ls("show-hidden", false),
+      showHidden: localStorage("show-hidden", false),
       sortMode: "name" as SortMode,
       error: false,
-      fetching: false,
+      refreshing: false,
       ok: false,
+      selection: new Array<string>(),
     };
   },
   getters: {
@@ -56,40 +55,79 @@ export const useFilesStore = defineStore("files", {
         return nameSortFn;
       }
     },
+    selecting(state): boolean {
+      return state.selection.length !== 0;
+    },
+    selected(state): (path: string) => boolean {
+      return (path: string) => {
+        return state.selection.find((it) => it == path) !== undefined;
+      };
+    },
   },
   actions: {
-    async fetch(dest?: string): Promise<void> {
+    async refresh(): Promise<void> {
       const loading = ElLoading.service({});
-      this.fetching = true;
+      this.refreshing = true;
       try {
-        if (!dest) {
-          dest = this.path;
-        }
-        const r = await fetchTree(dest);
-        this.path = r.path;
-        this.rawItems = r.items;
-        let t = r.path.split("/").filter((v) => v != "");
-        let s = "";
-        let tar = [{ name: "sdcard", dest: "/" }];
-        t.forEach((v) => {
-          s = path.join(s, v);
-          tar.push({ name: v, dest: s });
-        });
-        this.pathArr = tar;
+        const res = await lsDirectory(this.path);
+        this.rawItems = res.items;
         this.error = false;
         this.ok = true;
       } catch (e) {
-        ElMessage.error("Loading error");
         this.error = true;
         this.ok = false;
+        this.navigate("/");
         throw e;
       } finally {
         loading.close();
-        this.fetching = false;
+        this.refreshing = false;
+      }
+    },
+    async navigate(dest: string): Promise<void> {
+      if (dest !== this.path) {
+        this.path = dest;
+        this.pathArr = splitPath(this.path);
+        router.push({ path: "/files", query: { path: dest } });
+        await this.refresh();
       }
     },
     sortBy(mode: SortMode) {
       this.sortMode = mode;
     },
+    toggleSelect(path: string) {
+      if (this.selection.find((it) => it == path) !== undefined) {
+        this.selection = this.selection.filter((it) => it != path);
+      } else {
+        this.selection.push(path);
+      }
+    },
+    clearSelect() {
+      this.selection = [];
+    },
+    async deleteSelected(): Promise<void> {
+      await deleteFiles(this.selection);
+      this.selection = [];
+    },
+    async downloadSelected() {
+      await downloadFiles(this.selection);
+      this.selection = [];
+    },
   },
 });
+
+interface PathItem {
+  name: string;
+  dest: string;
+}
+
+function splitPath(p: string): Array<PathItem> {
+  const ret = new Array<PathItem>();
+  ret.push({ name: "sdcard", dest: "/" });
+  let t = p.split("/").filter((v) => v != "");
+  let s = "";
+  t.forEach((v) => {
+    s = path.join(s, v);
+    ret.push({ name: v, dest: s });
+  });
+  return ret;
+}

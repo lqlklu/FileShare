@@ -13,6 +13,9 @@ const router = createRouter({
       path: "/files",
       name: "Files",
       component: () => import("@/components/FilesView.vue"),
+      props: (route) => ({
+        path: route.query["path"] || "/",
+      }),
     },
     {
       path: "/documents",
@@ -38,6 +41,11 @@ const router = createRouter({
       path: "/videos",
       name: "Videos",
       component: () => import("@/components/VideosView.vue"),
+    },
+    {
+      path: "/clipboard",
+      name: "Clipboard",
+      component: () => import("@/components/ClipboardView.vue"),
     },
   ],
 });
